@@ -382,6 +382,68 @@ def reset_all_rewards_api():
 	except Exception as e:
 		return jsonify({"success": False, "error": str(e)})
 
+def auto_git_sync_templates():
+	"""
+	Automatically commits and pushes template and curriculum changes to Git.
+	"""
+	try:
+		import subprocess
+		ts_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+		git_env = os.environ.copy()
+		git_env["GIT_AUTHOR_NAME"] = "WadePan"
+		git_env["GIT_AUTHOR_EMAIL"] = "wade_pan@apple.com"
+		git_env["GIT_COMMITTER_NAME"] = "WadePan"
+		git_env["GIT_COMMITTER_EMAIL"] = "wade_pan@apple.com"
+		
+		cmd = f'git -C "{current_dir}" -c user.name="WadePan" -c user.email="wade_pan@apple.com" add math_templates_curriculum.json config.json templates/index.html && git -C "{current_dir}" -c user.name="WadePan" -c user.email="wade_pan@apple.com" commit -m "auto: sync template changes to git [{ts_str}]" && git -C "{current_dir}" push origin main'
+		subprocess.Popen(cmd, shell=True, env=git_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+	except Exception:
+		pass
+
+def check_is_admin():
+	"""Checks whether the currently active session belongs to an admin."""
+	return session.get("role") == "admin"
+
+@app.route("/api/git/push", methods=["POST"])
+def git_push_api():
+	"""
+	Executes Git Commit and Push to remote repository (Admin only).
+	"""
+	if not check_is_admin():
+		return jsonify({"success": False, "error": "🔒 权限不足：只有家长管理员 (Admin) 可以执行 Git Push！"}), 403
+
+	try:
+		import subprocess
+		git_env = os.environ.copy()
+		git_env["GIT_AUTHOR_NAME"] = "WadePan"
+		git_env["GIT_AUTHOR_EMAIL"] = "wade_pan@apple.com"
+		git_env["GIT_COMMITTER_NAME"] = "WadePan"
+		git_env["GIT_COMMITTER_EMAIL"] = "wade_pan@apple.com"
+
+		ts_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+		cmd = f'git -C "{current_dir}" -c user.name="WadePan" -c user.email="wade_pan@apple.com" add math_templates_curriculum.json config.json templates/index.html && git -C "{current_dir}" -c user.name="WadePan" -c user.email="wade_pan@apple.com" commit -m "update: sync custom templates by admin [{ts_str}]" && git -C "{current_dir}" push origin main'
+		
+		proc = subprocess.run(cmd, shell=True, env=git_env, text=True, capture_output=True, timeout=25)
+		
+		if proc.returncode != 0 and ("nothing to commit" in proc.stdout or "nothing to commit" in proc.stderr):
+			push_proc = subprocess.run(f'git -C "{current_dir}" push origin main', shell=True, env=git_env, text=True, capture_output=True, timeout=25)
+			return jsonify({
+				"success": True,
+				"message": "✅ 模板与文件已经是最新状态，远程 Git 已同步！",
+				"details": push_proc.stdout or push_proc.stderr
+			})
+		elif proc.returncode == 0:
+			return jsonify({
+				"success": True,
+				"message": "🎉 成功将最新模板和修改提交并推送到 GitHub 远程仓库！",
+				"details": proc.stdout
+			})
+		else:
+			err_msg = proc.stderr or proc.stdout
+			return jsonify({"success": False, "error": f"Git Push 失败: {err_msg}"})
+	except Exception as e:
+		return jsonify({"success": False, "error": f"执行 Git Push 出错: {str(e)}"})
+
 # ==========================================
 # 4. Reusable Quick Templates APIs
 # ==========================================
@@ -401,7 +463,7 @@ def get_templates():
 
 @app.route("/api/templates", methods=["POST"])
 def create_template():
-	"""Creates a new reusable task template."""
+	"""Creates a new reusable task template and auto-syncs to Git."""
 	try:
 		data = request.json or {}
 		name = data.get("name", "").strip()
@@ -423,20 +485,25 @@ def create_template():
 		conn.commit()
 		conn.close()
 
-		return jsonify({"success": True, "message": "💾 模板保存成功！"})
+		auto_git_sync_templates()
+
+		return jsonify({"success": True, "message": "💾 模板保存成功并自动同步至 Git！"})
 	except Exception as e:
 		return jsonify({"success": False, "error": str(e)})
 
 @app.route("/api/templates/<int:template_id>", methods=["DELETE"])
 def delete_template(template_id):
-	"""Deletes a task template."""
+	"""Deletes a task template and auto-syncs to Git."""
 	try:
 		conn = get_db_connection()
 		cursor = conn.cursor()
 		cursor.execute("DELETE FROM templates WHERE id = ?", (template_id,))
 		conn.commit()
 		conn.close()
-		return jsonify({"success": True, "message": "🗑️ 模板已成功删除"})
+
+		auto_git_sync_templates()
+
+		return jsonify({"success": True, "message": "🗑️ 模板已成功删除并自动同步至 Git"})
 	except Exception as e:
 		return jsonify({"success": False, "error": str(e)})
 
