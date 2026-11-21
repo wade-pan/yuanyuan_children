@@ -390,12 +390,12 @@ def auto_git_sync_templates():
 		import subprocess
 		ts_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 		git_env = os.environ.copy()
-		git_env["GIT_AUTHOR_NAME"] = "WadePan"
-		git_env["GIT_AUTHOR_EMAIL"] = "wade_pan@apple.com"
-		git_env["GIT_COMMITTER_NAME"] = "WadePan"
-		git_env["GIT_COMMITTER_EMAIL"] = "wade_pan@apple.com"
+		git_env["GIT_AUTHOR_NAME"] = "wade-pan"
+		git_env["GIT_AUTHOR_EMAIL"] = "wade-pan@users.noreply.github.com"
+		git_env["GIT_COMMITTER_NAME"] = "wade-pan"
+		git_env["GIT_COMMITTER_EMAIL"] = "wade-pan@users.noreply.github.com"
 		
-		cmd = f'git -C "{current_dir}" -c user.name="WadePan" -c user.email="wade_pan@apple.com" add math_templates_curriculum.json config.json templates/index.html && git -C "{current_dir}" -c user.name="WadePan" -c user.email="wade_pan@apple.com" commit -m "auto: sync template changes to git [{ts_str}]" && git -C "{current_dir}" push origin main'
+		cmd = f'git -C "{current_dir}" -c user.name="wade-pan" -c user.email="wade-pan@users.noreply.github.com" add math_templates_curriculum.json config.json templates/index.html && git -C "{current_dir}" -c user.name="wade-pan" -c user.email="wade-pan@users.noreply.github.com" commit -m "auto: sync template changes to git [{ts_str}]" && git -C "{current_dir}" push origin main'
 		subprocess.Popen(cmd, shell=True, env=git_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 	except Exception:
 		pass
@@ -415,13 +415,13 @@ def git_push_api():
 	try:
 		import subprocess
 		git_env = os.environ.copy()
-		git_env["GIT_AUTHOR_NAME"] = "WadePan"
-		git_env["GIT_AUTHOR_EMAIL"] = "wade_pan@apple.com"
-		git_env["GIT_COMMITTER_NAME"] = "WadePan"
-		git_env["GIT_COMMITTER_EMAIL"] = "wade_pan@apple.com"
+		git_env["GIT_AUTHOR_NAME"] = "wade-pan"
+		git_env["GIT_AUTHOR_EMAIL"] = "wade-pan@users.noreply.github.com"
+		git_env["GIT_COMMITTER_NAME"] = "wade-pan"
+		git_env["GIT_COMMITTER_EMAIL"] = "wade-pan@users.noreply.github.com"
 
 		ts_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-		cmd = f'git -C "{current_dir}" -c user.name="WadePan" -c user.email="wade_pan@apple.com" add math_templates_curriculum.json config.json templates/index.html && git -C "{current_dir}" -c user.name="WadePan" -c user.email="wade_pan@apple.com" commit -m "update: sync custom templates by admin [{ts_str}]" && git -C "{current_dir}" push origin main'
+		cmd = f'git -C "{current_dir}" -c user.name="wade-pan" -c user.email="wade-pan@users.noreply.github.com" add math_templates_curriculum.json config.json templates/index.html && git -C "{current_dir}" -c user.name="wade-pan" -c user.email="wade-pan@users.noreply.github.com" commit -m "update: sync custom templates by admin [{ts_str}]" && git -C "{current_dir}" push origin main'
 		
 		proc = subprocess.run(cmd, shell=True, env=git_env, text=True, capture_output=True, timeout=25)
 		
